@@ -102,8 +102,8 @@ except Exception as e:
 # --- Add custom folder paths to ComfyUI ---
 SDPOSE_MODEL_DIR = os.path.join(folder_paths.models_dir, "SDPose_OOD")
 YOLO_MODEL_DIR = os.path.join(folder_paths.models_dir, "yolo")
-folder_paths.folder_names_and_paths["SDPose_OOD"] = ([SDPOSE_MODEL_DIR], folder_paths.supported_pt_extensions)
-folder_paths.folder_names_and_paths["yolo"] = ([YOLO_MODEL_DIR], {".pt"})
+folder_paths.folder_names_and_paths["SDPose_OOD"] = ([SDPOSE_MODEL_DIR, os.path.join(folder_paths.cache_dir, "models/SDPose_OOD")], folder_paths.supported_pt_extensions)
+folder_paths.folder_names_and_paths["yolo"] = ([YOLO_MODEL_DIR, os.path.join(folder_paths.cache_dir, "models/yolo")], {".pt"})
 
 os.makedirs(SDPOSE_MODEL_DIR, exist_ok=True)
 os.makedirs(YOLO_MODEL_DIR, exist_ok=True)
@@ -612,8 +612,11 @@ class SDPoseOODLoader:
         model_path = os.path.join(SDPOSE_MODEL_DIR, repo_id.split('/')[-1])
         
         if not os.path.exists(os.path.join(model_path, "unet")):
-            print(f"SDPose Node: Downloading model from {repo_id} to {model_path}")
-            snapshot_download(repo_id=repo_id, local_dir=model_path, local_dir_use_symlinks=False)
+            if os.path.exists(os.path.join(folder_paths.cache_dir, "models/SDPose_OOD", repo_id.split('/')[-1])):
+                model_path = os.path.join(folder_paths.cache_dir, "models/SDPose_OOD", repo_id.split('/')[-1])
+            else:
+                print(f"SDPose Node: Downloading model from {repo_id} to {model_path}")
+                snapshot_download(repo_id=repo_id, local_dir=model_path, local_dir_use_symlinks=False)
 
         if device == "auto":
             device = model_management.get_torch_device()
@@ -697,6 +700,9 @@ def get_bert_base_uncased_model_path():
        glob.glob(os.path.join(comfy_bert_model_base, "**/pytorch_model.bin"), recursive=True):
         print("SDPose Node (GroundingDINO): Using models/bert-base-uncased")
         return comfy_bert_model_base
+    
+    if os.path.exists(os.path.join(folder_paths.cache_dir, "models/models--bert-base-uncased")):
+        return os.path.join(folder_paths.cache_dir, "models/models--bert-base-uncased")
         
     print("SDPose Node (GroundingDINO): Using HuggingFace Hub for bert-base-uncased")
     return "bert-base-uncased" # Default fallback to HF Hub download
