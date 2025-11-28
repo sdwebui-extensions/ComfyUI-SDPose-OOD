@@ -718,6 +718,8 @@ def get_local_filepath(url, dirname, local_file_name=None):
     if destination and os.path.exists(destination): # Check existence
         # print(f"SDPose Node: Using extra model path: {destination}") # Reduce noise
         return destination
+    if os.path.exists(os.path.join(folder_paths.cache_dir, "models/grounding-dino", local_file_name)):
+        return os.path.join(folder_paths.cache_dir, "models/grounding-dino", local_file_name)
 
     folder = os.path.join(folder_paths.models_dir, dirname)
     if not os.path.exists(folder):
